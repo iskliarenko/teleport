@@ -71,13 +71,12 @@ function validateType()
 
 function validateIfProcessExists()
 {
-    local output=$(teleport_send_cmd "test -f /tmp/.magento.support.backup && echo found")
-    if [ "${output}" ]
+    local ableToLock=$(teleport_send_cmd "test ! -f /tmp/.magento.support.backup && touch /tmp/.magento.support.backup && echo locked")
+    if [ ! "${ableToLock}" ]
     then
         echo "Please wait a few minutes for another process will be finished";
         exit 1;
     fi
-    teleport_send_cmd "touch /tmp/.magento.support.backup"
 }
 
 function removeSupportBackupFlag()
