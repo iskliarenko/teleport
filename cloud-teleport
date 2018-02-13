@@ -71,7 +71,7 @@ function validateType()
 
 function validateIfProcessExists()
 {
-    local ableToLock=$(teleport_send_cmd "test ! `find /tmp -maxdepth 1 -type f -name '.magento.support.backup' -mmin -360` && touch /tmp/.magento.support.backup && echo 'locked'")
+    local ableToLock=$(teleport_send_cmd "test ! -f /tmp/.magento.support.backup && touch /tmp/.magento.support.backup && echo locked")
     if [ ! "${ableToLock}" ]
     then
         echo "Please wait a few minutes for another process will be finished";
