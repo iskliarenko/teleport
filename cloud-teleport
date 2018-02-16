@@ -72,8 +72,8 @@ function validateType()
 
 function validateIfProcessExists()
 {
-    local ableToLock=$(teleport_send_cmd "test ! -f /tmp/.magento.support.backup && touch /tmp/.magento.support.backup && echo locked")
-    if [ ! "${ableToLock}" ]
+    LOCKED_BY_CURRENT_SESSION=$(teleport_send_cmd "test ! -f /tmp/.magento.support.backup && touch /tmp/.magento.support.backup && echo locked")
+    if [ ! "${LOCKED_BY_CURRENT_SESSION}" ]
     then
         echo "Please wait a few minutes for another process will be finished";
         exit 1;
@@ -87,7 +87,10 @@ function removeOutdatedFlag()
 
 function removeSupportBackupFlag()
 {
+  if [ "$LOCKED_BY_CURRENT_SESSION" ]
+  then
     teleport_send_cmd "test -f /tmp/.magento.support.backup && rm /tmp/.magento.support.backup" && echo "Cleaned up the lock file /tmp/.magento.support.backup"
+  fi
 }
 
 function help()
