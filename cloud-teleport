@@ -38,11 +38,12 @@ function dump_by_type()
 function dump()
 {
   showMagentoVersion
+  removeOutdatedFlag
   validateIfProcessExists
   if [ -z "$1" ]
   then
-  dump_by_type "code"
-  dump_by_type "db"
+    dump_by_type "code"
+    dump_by_type "db"
   else
     dump_by_type $1
   fi
@@ -79,9 +80,14 @@ function validateIfProcessExists()
     fi
 }
 
+function removeOutdatedFlag()
+{
+  teleport_send_cmd "test \$(find /tmp/ -maxdepth 1 -type f -mmin +360 -name '.magento.support.backup') && rm /tmp/.magento.support.backup"
+}
+
 function removeSupportBackupFlag()
 {
-    teleport_send_cmd "rm /tmp/.magento.support.backup"
+    teleport_send_cmd "test -f /tmp/.magento.support.backup && rm /tmp/.magento.support.backup" && echo "Cleaned up the lock file /tmp/.magento.support.backup"
 }
 
 function help()
@@ -139,6 +145,8 @@ function processoptions()
       shift
   done
 }
+
+trap 'removeSupportBackupFlag; exit' SIGHUP SIGINT SIGQUIT SIGTERM
 
 IGNORE_SANITIZE=
 TELEPORT_COMMAND=help
