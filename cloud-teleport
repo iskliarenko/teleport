@@ -82,6 +82,7 @@ function validateIfProcessExists()
 
 function removeOutdatedFlag()
 {
+  # Remove the flag older six hours
   teleport_send_cmd "test \$(find /tmp/ -maxdepth 1 -type f -mmin +360 -name '.magento.support.backup') && rm /tmp/.magento.support.backup"
 }
 
