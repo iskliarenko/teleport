@@ -2,11 +2,30 @@
 
 function teleport_send_cmd()
 {
+  if isIntegrationEnv
+  then
+    ssh ${PROJECT_ID} ${1}
+    return 0;
+  fi
   tsh --proxy=leap.magento.cloud:10443 --user="${TELEPORT_USER}" ssh ${PROJECT_ID#*.}@${TELEPORT_SERVER}${PROJECT_ID%_stg}.ent.magento.cloud ${1}
 }
 function teleport_download_file()
 {
+  if isIntegrationEnv
+  then
+    scp ${PROJECT_ID}:${1} ./
+    return 0;
+  fi
   tsh --proxy=leap.magento.cloud:10443 --user="${TELEPORT_USER}" scp ${PROJECT_ID#*.}@${PROJECT_ID%_stg}.ent.magento.cloud:${1} ./ ;
+}
+
+function isIntegrationEnv()
+{
+  if [ "${#PROJECT_ID}" -gt 15 ]
+  then
+    return 0;
+  fi
+  return 1;
 }
 
 function teleport_ssh()
