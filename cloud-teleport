@@ -57,11 +57,12 @@ function dump_by_type()
 function dump()
 {
   showMagentoVersion
+  removeOutdatedFlag
   validateIfProcessExists
   if [ -z "$1" ]
   then
-  dump_by_type "code"
-  dump_by_type "db"
+    dump_by_type "code"
+    dump_by_type "db"
   else
     dump_by_type $1
   fi
@@ -90,17 +91,26 @@ function validateType()
 
 function validateIfProcessExists()
 {
-    local ableToLock=$(teleport_send_cmd "test ! -f /tmp/.magento.support.backup && touch /tmp/.magento.support.backup && echo locked")
-    if [ ! "${ableToLock}" ]
+    LOCKED_BY_CURRENT_SESSION=$(teleport_send_cmd "test ! -f /tmp/.magento.support.backup && touch /tmp/.magento.support.backup && echo locked")
+    if [ ! "${LOCKED_BY_CURRENT_SESSION}" ]
     then
         echo "Please wait a few minutes for another process will be finished";
         exit 1;
     fi
 }
 
+function removeOutdatedFlag()
+{
+  # Remove the flag older six hours
+  teleport_send_cmd "test \$(find /tmp/ -maxdepth 1 -type f -mmin +360 -name '.magento.support.backup') && rm /tmp/.magento.support.backup"
+}
+
 function removeSupportBackupFlag()
 {
-    teleport_send_cmd "rm /tmp/.magento.support.backup"
+  if [ "$LOCKED_BY_CURRENT_SESSION" ]
+  then
+    teleport_send_cmd "test -f /tmp/.magento.support.backup && rm /tmp/.magento.support.backup" && echo "Cleaned up the lock file /tmp/.magento.support.backup"
+  fi
 }
 
 function help()
@@ -158,6 +168,8 @@ function processoptions()
       shift
   done
 }
+
+trap 'removeSupportBackupFlag; exit' SIGHUP SIGINT SIGQUIT SIGTERM
 
 IGNORE_SANITIZE=
 TELEPORT_COMMAND=help
